@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import mermaid from "mermaid";
 
 type ModalTab = "model" | "architecture" | "sequence";
 
@@ -63,20 +62,19 @@ export function ArchitectureModal({
   const diagramRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: "dark",
-      securityLevel: "strict",
-    });
-  }, []);
-
-  useEffect(() => {
     if (!isOpen || !diagramRef.current) return;
 
     let cancelled = false;
     const renderDiagram = async () => {
       setRenderError("");
       try {
+        const { default: mermaid } = await import("mermaid");
+        if (cancelled) return;
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: "dark",
+          securityLevel: "strict",
+        });
         const id = `architecture-mermaid-${activeTab}-${Date.now()}`;
         const { svg } = await mermaid.render(id, diagrams[activeTab]);
         if (!cancelled && diagramRef.current) {
@@ -84,8 +82,11 @@ export function ArchitectureModal({
         }
       } catch (error: unknown) {
         if (!cancelled) {
+          console.error("Failed to load or render the architecture diagram.", error);
           setRenderError(
-            error instanceof Error ? error.message : "Unable to render diagram.",
+            error instanceof Error
+              ? `Unable to render this diagram: ${error.message}`
+              : "Unable to load the diagram renderer. The rest of the application is still available.",
           );
         }
       }
