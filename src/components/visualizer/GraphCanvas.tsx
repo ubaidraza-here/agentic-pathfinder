@@ -282,7 +282,7 @@ export function GraphCanvas({
         onEdgeClick={handleEdgeClick}
         onEdgeDoubleClick={handleEdgeDoubleClick}
         fitView
-        fitViewOptions={{ padding: 0.18 }}
+        fitViewOptions={{ padding: 0.2 }}
         nodesFocusable={false}
         edgesFocusable
         nodesConnectable={false}

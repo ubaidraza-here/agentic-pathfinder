@@ -24,12 +24,12 @@ export function PlaybackControls({
   const canStepForward = currentIndex < lastIndex;
 
   return (
-    <div className="flex min-h-16 items-center gap-3 rounded-lg border border-slate-800 bg-slate-900/95 px-4 py-3 text-slate-100">
+    <div className="flex min-h-16 flex-wrap items-center gap-2 rounded-lg border border-slate-800 bg-slate-900/95 px-3 py-2 text-slate-100 sm:flex-nowrap sm:gap-2 sm:px-6">
       <button
         type="button"
         onClick={onTogglePlay}
         disabled={steps.length === 0}
-        className="min-w-20 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
+        className="min-w-0 flex-1 rounded-md bg-indigo-600 px-2 py-2 text-xs font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 sm:min-w-20 sm:flex-none sm:px-3 sm:text-sm"
       >
         {isPlaying ? "Pause" : "Play"}
       </button>
@@ -38,7 +38,7 @@ export function PlaybackControls({
         type="button"
         onClick={() => onStepChange(Math.max(0, currentIndex - 1))}
         disabled={!canStepBack}
-        className="rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm transition hover:border-slate-500 disabled:cursor-not-allowed disabled:opacity-40"
+        className="min-w-0 flex-1 rounded-md border border-slate-700 bg-slate-950/60 px-2 py-2 text-xs transition hover:border-slate-500 disabled:cursor-not-allowed disabled:opacity-40 sm:flex-none sm:px-3 sm:text-sm"
       >
         Step Back
       </button>
@@ -47,7 +47,7 @@ export function PlaybackControls({
         type="button"
         onClick={() => onStepChange(Math.min(lastIndex, currentIndex + 1))}
         disabled={!canStepForward}
-        className="rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm transition hover:border-slate-500 disabled:cursor-not-allowed disabled:opacity-40"
+        className="min-w-0 flex-1 rounded-md border border-slate-700 bg-slate-950/60 px-2 py-2 text-xs transition hover:border-slate-500 disabled:cursor-not-allowed disabled:opacity-40 sm:flex-none sm:px-3 sm:text-sm"
       >
         Step Forward
       </button>
@@ -55,12 +55,12 @@ export function PlaybackControls({
       <button
         type="button"
         onClick={onReset}
-        className="rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm transition hover:border-slate-500"
+        className="min-w-0 flex-1 rounded-md border border-slate-700 bg-slate-950/60 px-2 py-2 text-xs transition hover:border-slate-500 sm:flex-none sm:px-3 sm:text-sm"
       >
         Reset
       </button>
 
-      <div className="flex min-w-32 flex-1 items-center gap-3">
+      <div className="order-first flex w-full min-w-0 items-center gap-3 sm:order-none sm:flex-1">
         <span className="shrink-0 text-xs text-slate-400">
           {currentIndex}/{lastIndex}
         </span>
@@ -77,12 +77,12 @@ export function PlaybackControls({
         />
       </div>
 
-      <label className="flex items-center gap-2 text-xs text-slate-400">
+      <label className="ml-auto flex shrink-0 items-center gap-2 text-xs text-slate-400">
         Speed
         <select
           value={speedMs}
           onChange={(event) => onSpeedChange(Number(event.target.value))}
-          className="rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100"
+          className="max-w-24 rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-xs text-slate-100 sm:max-w-none sm:text-sm"
           aria-label="Execution speed"
         >
             <option value={200}>200ms</option>

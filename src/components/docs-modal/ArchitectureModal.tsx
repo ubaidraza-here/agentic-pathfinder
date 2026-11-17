@@ -111,7 +111,7 @@ export function ArchitectureModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-2 sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="architecture-modal-title"
@@ -119,7 +119,7 @@ export function ArchitectureModal({
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div className="flex max-h-[85vh] w-full max-w-5xl flex-col overflow-y-auto rounded-lg border border-slate-800 bg-slate-900/95 shadow-2xl">
+      <div className="flex max-h-[88vh] w-[95vw] max-w-5xl flex-col overflow-y-auto rounded-lg border border-slate-800 bg-slate-900/95 p-4 shadow-2xl sm:p-6">
         <header className="flex items-center justify-between border-b border-slate-800 px-5 py-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
@@ -138,7 +138,7 @@ export function ArchitectureModal({
           </button>
         </header>
 
-        <div className="flex border-b border-slate-800 px-5" role="tablist" aria-label="Architecture documentation sections">
+        <div className="flex min-w-0 overflow-x-auto border-b border-slate-800" role="tablist" aria-label="Architecture documentation sections">
           {(Object.keys(tabLabels) as ModalTab[]).map((tab) => (
             <button
               key={tab}
@@ -146,7 +146,7 @@ export function ArchitectureModal({
               role="tab"
               aria-selected={activeTab === tab}
               onClick={() => setActiveTab(tab)}
-              className={`border-b-2 px-4 py-3 text-sm transition ${
+              className={`shrink-0 whitespace-nowrap border-b-2 px-4 py-3 text-sm transition ${
                 activeTab === tab
                   ? "border-sky-400 text-sky-300"
                   : "border-transparent text-slate-400 hover:text-slate-200"
@@ -157,7 +157,7 @@ export function ArchitectureModal({
           ))}
         </div>
 
-        <div className="min-h-0 flex-1 overflow-auto p-5">
+        <div className="min-h-0 min-w-0 flex-1 overflow-auto py-4 sm:py-5">
           {activeTab === "model" && (
             <section className="mb-5 rounded-md border border-slate-800 bg-[#0f172a] p-4 text-sm text-slate-200">
               <h3 className="text-base font-semibold text-white">Formal System Model</h3>
@@ -223,7 +223,7 @@ export function ArchitectureModal({
           ) : (
             <div
               ref={diagramRef}
-              className="min-h-72 overflow-x-auto rounded-md border border-slate-800 bg-[#090d16] p-4 [&_svg]:mx-auto [&_svg]:max-w-full"
+              className="min-h-72 min-w-0 w-full overflow-x-auto rounded-md border border-slate-800 bg-[#090d16] p-3 sm:p-4 [&_svg]:mx-auto [&_svg]:max-w-full"
             />
           )}
         </div>

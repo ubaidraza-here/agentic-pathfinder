@@ -25,7 +25,7 @@ export function ProblemInspector({
   const dataStructureName = getDataStructureName(algorithm);
 
   return (
-    <aside className="h-full overflow-y-auto rounded-lg border border-slate-800 bg-slate-900/90 p-4 text-slate-100">
+    <aside className="w-full min-w-0 rounded-lg border border-slate-800 bg-slate-900/90 p-3 text-slate-100 sm:p-4 lg:h-full lg:overflow-y-auto">
       <section aria-labelledby="formal-model-heading">
         <div className="mb-3">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">

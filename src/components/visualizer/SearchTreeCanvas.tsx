@@ -97,6 +97,7 @@ export function SearchTreeCanvas({
         target: treeNode.treeId,
         type: "straight",
         animated: isActiveEdge,
+        interactionWidth: 24,
         style: {
           stroke: isSolutionEdge
             ? "#22c55e"
@@ -114,7 +115,7 @@ export function SearchTreeCanvas({
         nodes={nodes}
         edges={edges}
         fitView
-        fitViewOptions={{ padding: 0.25 }}
+        fitViewOptions={{ padding: 0.2 }}
         nodesFocusable={false}
         edgesFocusable={false}
         nodesConnectable={false}

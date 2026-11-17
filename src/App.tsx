@@ -86,8 +86,8 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-[#090d16] text-slate-100">
-      <header className="flex h-16 items-center justify-between border-b border-slate-800 px-5">
-        <div>
+      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 px-3 py-2.5 sm:px-6 sm:py-3">
+        <div className="w-full sm:w-auto">
           <div className="text-sm font-bold tracking-wide">
             Agentic State-Space Pathfinder
           </div>
@@ -95,7 +95,7 @@ export function App() {
             Graph &amp; Search-Tree Visualizer
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:ml-auto sm:w-auto sm:gap-3">
           <select
             value={scenarioId}
             onChange={(event) =>
@@ -103,7 +103,7 @@ export function App() {
                 event.target.value as ScenarioDefinition["id"],
               )
             }
-            className="rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+            className="min-w-0 flex-1 rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm sm:flex-none"
             aria-label="Scenario"
           >
             <option value="campus">Campus</option>
@@ -115,7 +115,7 @@ export function App() {
             onChange={(event) =>
               setAlgorithm(event.target.value as AlgorithmType)
             }
-            className="rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+            className="min-w-0 flex-1 rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm sm:flex-none"
             aria-label="Algorithm"
           >
             <option value="BFS">BFS</option>
@@ -126,7 +126,7 @@ export function App() {
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
-            className="rounded border border-indigo-500/50 bg-indigo-950/40 px-3 py-2 text-sm text-indigo-200"
+            className="w-full rounded border border-indigo-500/50 bg-indigo-950/40 px-3 py-2 text-sm text-indigo-200 sm:w-auto"
           >
             Architecture &amp; Formal Model
           </button>
@@ -134,8 +134,14 @@ export function App() {
       </header>
 
       {currentStep && (
-        <main className="grid h-[calc(100vh-64px)] grid-cols-[65%_35%] gap-3 p-3 pb-20">
-          <section className="min-h-0">
+        <main className="flex min-h-screen flex-col gap-3 overflow-y-auto p-3 pb-28 lg:h-[calc(100vh-132px)] lg:min-h-0 lg:flex-row lg:gap-0 lg:overflow-hidden lg:p-4">
+          <section
+            className={`w-full lg:w-[65%] ${
+              stageView === "split"
+                ? "h-auto lg:h-full"
+                : "h-[420px] sm:h-[500px] lg:h-full"
+            }`}
+          >
             <div className="mb-2 flex h-10 items-center rounded-lg border border-slate-800 bg-slate-900/90 p-1">
               {([
                 ["graph", "Knowledge Graph"],
@@ -175,22 +181,28 @@ export function App() {
             )}
 
             {stageView === "split" && (
-              <div className="grid h-[calc(100%-48px)] grid-cols-[58%_42%] gap-3">
-                <GraphCanvas
-                  scenario={scenario}
-                  currentStep={currentStep}
-                  onToggleEdgeBlock={toggleEdgeBlock}
-                  onUpdateEdgeCost={updateEdgeCost}
-                />
-                <SearchTreeCanvas currentStep={currentStep} />
+              <div className="flex flex-col gap-3 md:flex-row lg:h-[calc(100%-48px)]">
+                <div className="h-[360px] w-full md:flex-[58] md:min-w-0 lg:h-full">
+                  <GraphCanvas
+                    scenario={scenario}
+                    currentStep={currentStep}
+                    onToggleEdgeBlock={toggleEdgeBlock}
+                    onUpdateEdgeCost={updateEdgeCost}
+                  />
+                </div>
+                <div className="h-[360px] w-full md:flex-[42] md:min-w-0 lg:h-full">
+                  <SearchTreeCanvas currentStep={currentStep} />
+                </div>
               </div>
             )}
           </section>
-          <ProblemInspector
-            scenario={scenario}
-            algorithm={algorithm}
-            currentStep={currentStep}
-          />
+          <div className="w-full lg:w-[35%] lg:min-w-0">
+            <ProblemInspector
+              scenario={scenario}
+              algorithm={algorithm}
+              currentStep={currentStep}
+            />
+          </div>
         </main>
       )}
 
