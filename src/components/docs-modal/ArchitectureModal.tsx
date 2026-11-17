@@ -118,7 +118,7 @@ export function ArchitectureModal({
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div className="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-lg border border-slate-800 bg-slate-900/95 shadow-2xl">
+      <div className="flex max-h-[85vh] w-full max-w-5xl flex-col overflow-y-auto rounded-lg border border-slate-800 bg-slate-900/95 shadow-2xl">
         <header className="flex items-center justify-between border-b border-slate-800 px-5 py-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
@@ -161,7 +161,7 @@ export function ArchitectureModal({
             <section className="mb-5 rounded-md border border-slate-800 bg-[#0f172a] p-4 text-sm text-slate-200">
               <h3 className="text-base font-semibold text-white">Formal System Model</h3>
               <p className="mt-2">
-                M = (S, s0, G, A, T, c, h), where S is the finite state space,
+                M = {"<"}S, s0, G, A, T, c, h{">"}, where S is the finite state space,
                 s0 is the initial state, G is the goal set, A(s) defines available moves,
                 T is the state transition, c is positive edge cost, and h estimates
                 remaining cost to the goal.
@@ -170,6 +170,48 @@ export function ArchitectureModal({
                 T(s, move(s,u)) = u for an open undirected edge. The goal test succeeds
                 when the current state equals the scenario goal.
               </p>
+              <p className="mt-2">
+                A* evaluation: f(n) = g(n) + h(n). A successor is accepted only when
+                g(successor) improves; positive edge costs prevent cycle cost regressions.
+              </p>
+              <div className="mt-4 overflow-x-auto">
+                <table className="w-full border-collapse text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-700 text-slate-300">
+                      <th className="px-2 py-2">Algorithm</th>
+                      <th className="px-2 py-2">Time Complexity</th>
+                      <th className="px-2 py-2">Space Complexity</th>
+                      <th className="px-2 py-2">Optimality</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-slate-200">
+                    <tr className="border-b border-slate-800">
+                      <td className="px-2 py-2">BFS</td>
+                      <td className="px-2 py-2">O(V + E)</td>
+                      <td className="px-2 py-2">O(V)</td>
+                      <td className="px-2 py-2">Minimum hops</td>
+                    </tr>
+                    <tr className="border-b border-slate-800">
+                      <td className="px-2 py-2">DFS</td>
+                      <td className="px-2 py-2">O(V + E)</td>
+                      <td className="px-2 py-2">O(V)</td>
+                      <td className="px-2 py-2">Not guaranteed</td>
+                    </tr>
+                    <tr className="border-b border-slate-800">
+                      <td className="px-2 py-2">UCS</td>
+                      <td className="px-2 py-2">O((V + E) log V)</td>
+                      <td className="px-2 py-2">O(V)</td>
+                      <td className="px-2 py-2">Optimal</td>
+                    </tr>
+                    <tr>
+                      <td className="px-2 py-2">A*</td>
+                      <td className="px-2 py-2">O((V + E) log V) worst case</td>
+                      <td className="px-2 py-2">O(V) worst case</td>
+                      <td className="px-2 py-2">Optimal with admissible h</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </section>
           )}
 

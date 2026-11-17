@@ -1,7 +1,6 @@
 import {
   Background,
   Controls,
-  MarkerType,
   ReactFlow,
   type Edge,
   type Node,
@@ -35,8 +34,8 @@ export function SearchTreeCanvas({
     const siblingIndex = siblingIndexes.get(treeNode.depth) ?? 0;
     siblingIndexes.set(treeNode.depth, siblingIndex + 1);
     const siblingCount = siblingCounts.get(treeNode.depth) ?? 1;
-    const x = (siblingIndex - (siblingCount - 1) / 2) * 210;
-    const y = treeNode.depth * 150;
+    const x = (siblingIndex - (siblingCount - 1) / 2) * 150;
+    const y = treeNode.depth * 95;
 
     let background = "#475569";
     let border = "#94a3b8";
@@ -59,19 +58,20 @@ export function SearchTreeCanvas({
       position: { x, y },
       data: {
         label: (
-          <div className="text-center">
+          <div className="w-[120px] p-2 text-center">
             <div className="text-sm font-bold text-white">{treeNode.stateId}</div>
-            <div className="mt-1 text-[10px] leading-tight text-slate-950">
-              g({treeNode.pathCost}) · h({treeNode.heuristic}) · f({treeNode.totalCost})
+            <div className="mt-1 text-[11px] font-mono leading-tight text-slate-200">
+              g={treeNode.pathCost} h={treeNode.heuristic} f={treeNode.totalCost}
             </div>
           </div>
         ),
       },
       style: {
-        width: 170,
-        height: 78,
+        width: 120,
+        height: "auto",
+        minHeight: 72,
         border: `2px solid ${border}`,
-        borderRadius: 10,
+        borderRadius: 12,
         background,
         boxShadow,
         display: "flex",
@@ -95,15 +95,7 @@ export function SearchTreeCanvas({
         id: `${treeNode.parentTreeId}-${treeNode.treeId}`,
         source: treeNode.parentTreeId ?? "",
         target: treeNode.treeId,
-        type: "smoothstep",
-        markerEnd: {
-          type: MarkerType.ArrowClosed,
-          color: isSolutionEdge
-            ? "#22c55e"
-            : isActiveEdge
-              ? "#f59e0b"
-              : "#475569",
-        },
+        type: "straight",
         animated: isActiveEdge,
         style: {
           stroke: isSolutionEdge
@@ -117,12 +109,12 @@ export function SearchTreeCanvas({
     });
 
   return (
-    <div className="h-[210px] overflow-hidden rounded-lg border border-slate-800 bg-[#090d16]">
+    <div className="h-full min-h-[260px] overflow-hidden rounded-lg border border-slate-800 bg-[#090d16]">
       <ReactFlow
         nodes={nodes}
         edges={edges}
         fitView
-        fitViewOptions={{ padding: 0.18 }}
+        fitViewOptions={{ padding: 0.25 }}
         nodesFocusable={false}
         edgesFocusable={false}
         nodesConnectable={false}

@@ -35,18 +35,52 @@ function getNeighbors(
   return neighbors;
 }
 
+function reconstructStatePath(
+  goalEntry: FrontierEntry,
+  entryByTreeId: Map<string, FrontierEntry>,
+): string[] {
+  const path: string[] = [];
+  let treeId: string | null = goalEntry.treeId;
+
+  while (treeId) {
+    const entry = entryByTreeId.get(treeId);
+    if (!entry) break;
+    path.unshift(entry.stateId);
+    treeId = entry.parentTreeId;
+  }
+
+  return path;
+}
+
 export function generateExecutionSteps(
   scenario: ScenarioDefinition,
   algorithm: AlgorithmType,
 ): ExecutionStep[] {
-  const nodeById = new Map(scenario.nodes.map((node) => [node.id, node]));
+  const nodeById = new Map(
+    scenario.nodes.map((node) => [node.id, node]),
+  );
   const initialNode = nodeById.get(scenario.initialState);
-  if (!initialNode) return [];
+  if (!initialNode) {
+    return [{
+      stepIndex: 0,
+      currentNodeId: null,
+      currentTreeId: null,
+      frontier: [],
+      exploredIds: [],
+      activeEdgeId: null,
+      searchTree: [],
+      actionLog: `Cannot start: initial state ${scenario.initialState} is missing.`,
+      goalReached: false,
+      finalPath: [],
+      totalPathCost: 0,
+    }];
+  }
 
   let sequence = 0;
+  const initialTreeId = `${scenario.initialState}-${sequence}`;
   let frontier: FrontierEntry[] = [{
     stateId: scenario.initialState,
-    treeId: `${scenario.initialState}-${sequence}`,
+    treeId: initialTreeId,
     g: 0,
     h: initialNode.heuristic,
     f: initialNode.heuristic,
@@ -54,11 +88,16 @@ export function generateExecutionSteps(
     parentTreeId: null,
     activeEdgeId: null,
   }];
-  const entryByTreeId = new Map(frontier.map((entry) => [entry.treeId, entry]));
-  const bestCost = new Map<string, number>([[scenario.initialState, 0]]);
+
+  const entryByTreeId = new Map<string, FrontierEntry>([
+    [initialTreeId, frontier[0]],
+  ]);
+  const bestCost = new Map<string, number>([
+    [scenario.initialState, 0],
+  ]);
   const exploredIds: string[] = [];
   const searchTree: SearchTreeNode[] = [{
-    treeId: frontier[0].treeId,
+    treeId: initialTreeId,
     parentTreeId: null,
     stateId: scenario.initialState,
     depth: 0,
@@ -68,39 +107,49 @@ export function generateExecutionSteps(
     status: "frontier",
   }];
   const steps: ExecutionStep[] = [];
-  let stepIndex = 0;
+  let goalEntry: FrontierEntry | null = null;
 
   const snapshot = (
     current: FrontierEntry | null,
     actionLog: string,
-    goalReached: boolean,
   ): void => {
-    const frontierIds = new Set(frontier.map((entry) => entry.treeId));
-    const pathIds = goalReached ? reconstructPath(frontierEntryForGoal(current), searchTree) : [];
-    const pathTreeIds = new Set(pathIds.map((entry) => entry.treeId));
-    const renderedTree: SearchTreeNode[] = searchTree.map((treeNode) => ({
-      ...treeNode,
-      status:
-        pathTreeIds.has(treeNode.treeId)
-          ? ("path" as const)
-          : frontierIds.has(treeNode.treeId)
-            ? ("frontier" as const)
-            : exploredIds.includes(treeNode.stateId)
-              ? ("explored" as const)
-              : ("explored" as const),
-    }));
+    const frontierTreeIds = new Set(
+      frontier.map((entry) => entry.treeId),
+    );
+    const pathTreeIds = new Set<string>();
 
-    if (current) {
-      const currentTreeNode = renderedTree.find((node) => node.treeId === current.treeId);
-      if (currentTreeNode) currentTreeNode.status = goalReached ? "path" : "current";
+    if (goalEntry) {
+      let treeId: string | null = goalEntry.treeId;
+      while (treeId) {
+        pathTreeIds.add(treeId);
+        treeId = entryByTreeId.get(treeId)?.parentTreeId ?? null;
+      }
     }
 
-    const finalPath = goalReached
-      ? reconstructStatePath(current, entryByTreeId)
+    const renderedTree: SearchTreeNode[] = searchTree.map((treeNode) => {
+      let status: SearchTreeNode["status"];
+      if (pathTreeIds.has(treeNode.treeId)) {
+        status = "path";
+      } else if (frontierTreeIds.has(treeNode.treeId)) {
+        status = "frontier";
+      } else if (exploredIds.includes(treeNode.stateId)) {
+        status = "explored";
+      } else {
+        status = "explored";
+      }
+
+      if (current?.treeId === treeNode.treeId && !goalEntry) {
+        status = "current";
+      }
+      return { ...treeNode, status };
+    });
+
+    const finalPath = goalEntry
+      ? reconstructStatePath(goalEntry, entryByTreeId)
       : [];
 
     steps.push({
-      stepIndex,
+      stepIndex: steps.length,
       currentNodeId: current?.stateId ?? null,
       currentTreeId: current?.treeId ?? null,
       frontier: frontier.map((entry) => ({
@@ -114,61 +163,91 @@ export function generateExecutionSteps(
       activeEdgeId: current?.activeEdgeId ?? null,
       searchTree: renderedTree,
       actionLog,
-      goalReached,
+      goalReached: goalEntry !== null,
       finalPath,
-      totalPathCost: goalReached ? (current?.g ?? 0) : 0,
+      totalPathCost: goalEntry?.g ?? 0,
     });
-    stepIndex += 1;
   };
 
-  snapshot(frontier[0], `Start exploration at ${scenario.initialState}.`, false);
+  snapshot(null, `Start exploration at ${scenario.initialState}.`);
 
   while (frontier.length > 0) {
     let currentIndex = 0;
 
     if (algorithm === "DFS") {
       currentIndex = frontier.length - 1;
-    } else if (algorithm === "UCS" || algorithm === "ASTAR") {
-      frontier.sort((a, b) =>
-        algorithm === "ASTAR"
-          ? (a.f - b.f || a.g - b.g || a.sequence - b.sequence)
-          : (a.g - b.g || a.sequence - b.sequence),
+    } else if (algorithm === "UCS") {
+      currentIndex = frontier.reduce(
+        (bestIndex, entry, index) =>
+          entry.g < frontier[bestIndex].g
+          || (
+            entry.g === frontier[bestIndex].g
+            && entry.sequence < frontier[bestIndex].sequence
+          )
+            ? index
+            : bestIndex,
+        0,
+      );
+    } else if (algorithm === "ASTAR") {
+      currentIndex = frontier.reduce(
+        (bestIndex, entry, index) =>
+          entry.f < frontier[bestIndex].f
+          || (
+            entry.f === frontier[bestIndex].f
+            && entry.g > frontier[bestIndex].g
+          )
+          || (
+            entry.f === frontier[bestIndex].f
+            && entry.g === frontier[bestIndex].g
+            && entry.sequence < frontier[bestIndex].sequence
+          )
+            ? index
+            : bestIndex,
+        0,
       );
     }
 
     const current = frontier.splice(currentIndex, 1)[0];
-    if (exploredIds.includes(current.stateId)) {
+    const currentBestCost = bestCost.get(current.stateId);
+    if (
+      currentBestCost === undefined
+      || currentBestCost !== current.g
+    ) {
       continue;
     }
 
-    exploredIds.push(current.stateId);
-    const parentNode = searchTree.find((node) => node.treeId === current.treeId);
-    if (parentNode) parentNode.status = "explored";
+    if (!exploredIds.includes(current.stateId)) {
+      exploredIds.push(current.stateId);
+    }
 
-    const goalReached = current.stateId === scenario.goalState;
+    if (current.stateId === scenario.goalState) {
+      goalEntry = current;
+      snapshot(
+        current,
+        `Goal reached at ${current.stateId}.`,
+      );
+      break;
+    }
+
     snapshot(
       current,
-      goalReached
-        ? `Goal reached at ${current.stateId}.`
-        : `Expanding ${current.stateId} (${algorithm}).`,
-      goalReached,
+      `Expanding ${current.stateId} (${algorithm}).`,
     );
 
-    if (goalReached) break;
-
-    const neighbors = getNeighbors(scenario, current.stateId);
-    for (const { nodeId, edge } of neighbors) {
+    for (const { nodeId, edge } of getNeighbors(scenario, current.stateId)) {
       const node = nodeById.get(nodeId);
       if (!node) continue;
 
       const nextG = current.g + edge.cost;
       const previousBest = bestCost.get(nodeId);
-      if (previousBest !== undefined && previousBest <= nextG) continue;
+      if (previousBest !== undefined && previousBest <= nextG) {
+        continue;
+      }
 
       bestCost.set(nodeId, nextG);
       sequence += 1;
-      const depth = 1 + (searchTree.find((treeNode) =>
-        treeNode.treeId === current.treeId)?.depth ?? 0);
+      const parentDepth =
+        searchTree.find((treeNode) => treeNode.treeId === current.treeId)?.depth ?? 0;
       const entry: FrontierEntry = {
         stateId: nodeId,
         treeId: `${nodeId}-${sequence}`,
@@ -179,61 +258,31 @@ export function generateExecutionSteps(
         parentTreeId: current.treeId,
         activeEdgeId: edge.id,
       };
-      entryByTreeId.set(entry.treeId, entry);
 
+      entryByTreeId.set(entry.treeId, entry);
       searchTree.push({
         treeId: entry.treeId,
         parentTreeId: current.treeId,
         stateId: nodeId,
-        depth,
+        depth: parentDepth + 1,
         pathCost: nextG,
         heuristic: node.heuristic,
         totalCost: nextG + node.heuristic,
         status: "frontier",
       });
-
-      if (algorithm === "DFS") {
-        frontier.push(entry);
-      } else {
-        frontier.push(entry);
-      }
+      frontier.push(entry);
     }
   }
 
+  if (!goalEntry) {
+    const reachableGoal = false;
+    snapshot(
+      null,
+      reachableGoal
+        ? `Search exhausted before reaching ${scenario.goalState}.`
+        : `No open path reaches goal ${scenario.goalState}; frontier exhausted.`,
+    );
+  }
+
   return steps;
-}
-
-function frontierEntryForGoal(current: FrontierEntry | null): FrontierEntry | null {
-  return current;
-}
-
-function reconstructPath(
-  goalEntry: FrontierEntry | null,
-  searchTree: SearchTreeNode[],
-): Array<{ treeId: string }> {
-  if (!goalEntry) return [];
-  const treeById = new Map(searchTree.map((node) => [node.treeId, node]));
-  const path: Array<{ treeId: string }> = [];
-  let treeId: string | null = goalEntry.treeId;
-  while (treeId) {
-    path.unshift({ treeId });
-    treeId = treeById.get(treeId)?.parentTreeId ?? null;
-  }
-  return path;
-}
-
-function reconstructStatePath(
-  goalEntry: FrontierEntry | null,
-  entryByTreeId: Map<string, FrontierEntry>,
-): string[] {
-  if (!goalEntry) return [];
-  const path: string[] = [];
-  let treeId: string | null = goalEntry.treeId;
-  while (treeId) {
-    const entry = entryByTreeId.get(treeId);
-    if (!entry) break;
-    path.unshift(entry.stateId);
-    treeId = entry.parentTreeId;
-  }
-  return path;
 }

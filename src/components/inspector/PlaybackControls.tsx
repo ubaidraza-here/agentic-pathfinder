@@ -85,9 +85,9 @@ export function PlaybackControls({
           className="rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100"
           aria-label="Execution speed"
         >
-          <option value={200}>200ms</option>
-          <option value={500}>500ms</option>
-          <option value={1000}>1000ms</option>
+            <option value={200}>200ms</option>
+            <option value={500}>500ms</option>
+            <option value={1000}>1000ms</option>
         </select>
       </label>
     </div>
